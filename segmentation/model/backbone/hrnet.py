@@ -496,13 +496,18 @@ def _hrnet(arch, pretrained, progress, **kwargs):
     model = HighResolutionNet(MODEL_CONFIGS[arch], **kwargs)
     if pretrained:
         if int(os.environ.get("mapillary_pretrain", 0)):
-            logger.info("load the mapillary pretrained hrnet-w48 weights.")
+            print("load the mapillary pretrained hrnet-w48 weights.")
             model_url = model_urls['hrnet48_mapillary_pretrain']
         else:
             model_url = model_urls[arch]
 
         state_dict = load_state_dict_from_url(model_url,
-                                              progress=progress)
+                                              progress=progress,
+                                              map_location={"cuda:0": "cpu"})
+                                              
+        if 'state_dict' in state_dict:
+            print('openseg structure')
+            state_dict = {k.replace('module.backbone.', ''): v for k, v in state_dict['state_dict'].items()}
         model.load_state_dict(state_dict, strict=False)
     return model
 
