@@ -76,5 +76,9 @@ POST_PROCESSING:
   TOP_K_INSTANCE: 200
   STUFF_AREA: 2048
 OUTPUT_DIR: "../output/panoptic_deeplab_H48_B8_O4_90K_cityscapes"
+<<<<<<< HEAD
 GPUS: (0, 1, 2, 3, 4, 5, 6, 7)
+=======
+GPUS: (0, 1, 2, 3)
+>>>>>>> 322282a57f9e1bc3dbd2fe618830ab7361aa5650
 WORKERS: 1

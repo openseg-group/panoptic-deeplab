@@ -15,7 +15,11 @@ class ASPPConv(nn.Sequential):
         modules = [
             nn.Conv2d(in_channels, out_channels, 3, padding=dilation, dilation=dilation, bias=False),
             nn.BatchNorm2d(out_channels),
+<<<<<<< HEAD
             nn.ReLU(inplace=True)
+=======
+            nn.ReLU()
+>>>>>>> 322282a57f9e1bc3dbd2fe618830ab7361aa5650
         ]
         super(ASPPConv, self).__init__(*modules)
 
@@ -26,7 +30,11 @@ class ASPPPooling(nn.Module):
         self.aspp_pooling = nn.Sequential(
             nn.AdaptiveAvgPool2d(1),
             nn.Conv2d(in_channels, out_channels, 1, bias=False),
+<<<<<<< HEAD
             nn.ReLU(inplace=True)
+=======
+            nn.ReLU()
+>>>>>>> 322282a57f9e1bc3dbd2fe618830ab7361aa5650
         )
 
     def set_image_pooling(self, pool_size):
@@ -46,7 +54,11 @@ class ASPP(nn.Module):
         modules.append(nn.Sequential(
             nn.Conv2d(in_channels, out_channels, 1, bias=False),
             nn.BatchNorm2d(out_channels),
+<<<<<<< HEAD
             nn.ReLU(inplace=True)))
+=======
+            nn.ReLU()))
+>>>>>>> 322282a57f9e1bc3dbd2fe618830ab7361aa5650
 
         rate1, rate2, rate3 = tuple(atrous_rates)
         modules.append(ASPPConv(in_channels, out_channels, rate1))
@@ -59,7 +71,11 @@ class ASPP(nn.Module):
         self.project = nn.Sequential(
             nn.Conv2d(5 * out_channels, out_channels, 1, bias=False),
             nn.BatchNorm2d(out_channels),
+<<<<<<< HEAD
             nn.ReLU(inplace=True),
+=======
+            nn.ReLU(),
+>>>>>>> 322282a57f9e1bc3dbd2fe618830ab7361aa5650
             nn.Dropout(0.5))
 
     def set_image_pooling(self, pool_size):

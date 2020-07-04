@@ -1,18 +1,17 @@
 MODEL:
-  META_ARCHITECTURE: "panoptic_ocr"
+  META_ARCHITECTURE: "panoptic_deeplab"
   BN_MOMENTUM: 0.01
   BACKBONE:
-    META: "hrnet"
-    NAME: "hrnet48"
+    NAME: "resnet101"
     DILATION: (False, False, False)
     PRETRAINED: True
   DECODER:
-    IN_CHANNELS: 384
+    IN_CHANNELS: 2048
     FEATURE_KEY: "res5"
     DECODER_CHANNELS: 256
     ATROUS_RATES: (3, 6, 9)
   PANOPTIC_DEEPLAB:
-    LOW_LEVEL_CHANNELS: (192, 96, 48)
+    LOW_LEVEL_CHANNELS: (1024, 512, 256)
     LOW_LEVEL_KEY: ["res4", "res3", "res2"]
     LOW_LEVEL_CHANNELS_PROJECT: (128, 64, 32)
     INSTANCE:
@@ -29,11 +28,7 @@ DATASET:
   NUM_CLASSES: 19
   TRAIN_SPLIT: 'train'
   TEST_SPLIT: 'val'
-<<<<<<< HEAD
   CROP_SIZE: (1025, 2049)
-=======
-  CROP_SIZE: (513, 1025)
->>>>>>> 322282a57f9e1bc3dbd2fe618830ab7361aa5650
   MIRROR: True
   MIN_SCALE: 0.5
   MAX_SCALE: 2.0
@@ -59,10 +54,6 @@ LOSS:
     IGNORE: 255
     TOP_K_PERCENT: 0.2
     WEIGHT: 1.0
-  AUX_SEMANTIC:
-    NAME: "cross_entropy"
-    IGNORE: 255
-    WEIGHT: 0.4
   CENTER:
     NAME: "mse"
     WEIGHT: 200.0
@@ -70,12 +61,8 @@ LOSS:
     NAME: "l1"
     WEIGHT: 0.01
 TRAIN:
-<<<<<<< HEAD
   IMS_PER_BATCH: 8
-=======
-  IMS_PER_BATCH: 4
->>>>>>> 322282a57f9e1bc3dbd2fe618830ab7361aa5650
-  MAX_ITER: 90000
+  MAX_ITER: 120000
 DEBUG:
   DEBUG: True
   DEBUG_FREQ: 100
@@ -87,10 +74,6 @@ POST_PROCESSING:
   NMS_KERNEL: 7
   TOP_K_INSTANCE: 200
   STUFF_AREA: 2048
-<<<<<<< HEAD
-OUTPUT_DIR: "output/panoptic_ocr_H48_B8_O8_90K_cityscapes"
-=======
-OUTPUT_DIR: "../output/panoptic_deeplab_H48_B8_O4_90K_cityscapes"
->>>>>>> 322282a57f9e1bc3dbd2fe618830ab7361aa5650
+OUTPUT_DIR: "./output/panoptic_deeplab_R101_B8_O32_120K_cityscapes"
 GPUS: (0, 1, 2, 3)
 WORKERS: 1

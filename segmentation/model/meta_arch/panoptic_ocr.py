@@ -119,7 +119,13 @@ class PanopticOCR(BaseSegmentationModel):
             self.loss_meter_dict['Aux Semantic loss'].update(aux_semantic_loss.detach().cpu().item(), batch_size)
 
             loss += semantic_loss
+<<<<<<< HEAD
             loss += aux_semantic_loss
+=======
+            print("+ semantic_loss {}".format(loss))
+            loss += aux_semantic_loss
+            print("+ aux_semantic_loss {}".format(loss))
+>>>>>>> 322282a57f9e1bc3dbd2fe618830ab7361aa5650
 
             if self.center_loss is not None:
                 # Pixel-wise loss weight

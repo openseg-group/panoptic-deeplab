@@ -43,7 +43,11 @@ class SinglePanopticDeepLabDecoder(nn.Module):
                 nn.Sequential(
                     nn.Conv2d(low_level_channels[i], low_level_channels_project[i], 1, bias=False),
                     nn.BatchNorm2d(low_level_channels_project[i]),
+<<<<<<< HEAD
                     nn.ReLU(inplace=True)
+=======
+                    nn.ReLU()
+>>>>>>> 322282a57f9e1bc3dbd2fe618830ab7361aa5650
                 )
             )
             if i == 0:
