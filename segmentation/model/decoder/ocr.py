@@ -123,22 +123,14 @@ class _ObjectAttentionBlock(nn.Module):
         self.f_pixel = nn.Sequential(
             Conv2d(in_channels=self.in_channels, out_channels=self.key_channels,
                    kernel_size=1, stride=1, padding=0, bias=not norm,
-<<<<<<< HEAD
                    norm=norm_module(norm, self.key_channels), activation=F.relu_),
             Conv2d(in_channels=self.key_channels, out_channels=self.key_channels,
                    kernel_size=1, stride=1, padding=0, bias=not norm,
                    norm=norm_module(norm, self.key_channels), activation=F.relu_),
-=======
-                   norm=norm_module(norm, self.key_channels), activation=F.relu),
-            Conv2d(in_channels=self.key_channels, out_channels=self.key_channels,
-                   kernel_size=1, stride=1, padding=0, bias=not norm,
-                   norm=norm_module(norm, self.key_channels), activation=F.relu),
->>>>>>> 322282a57f9e1bc3dbd2fe618830ab7361aa5650
         )
         self.f_object = nn.Sequential(
             Conv2d(in_channels=self.in_channels, out_channels=self.key_channels,
                    kernel_size=1, stride=1, padding=0, bias=not norm,
-<<<<<<< HEAD
                    norm=norm_module(norm, self.key_channels), activation=F.relu_),
             Conv2d(in_channels=self.key_channels, out_channels=self.key_channels,
                    kernel_size=1, stride=1, padding=0, bias=not norm,
@@ -150,19 +142,6 @@ class _ObjectAttentionBlock(nn.Module):
         self.f_up = Conv2d(in_channels=self.key_channels, out_channels=self.in_channels,
                            kernel_size=1, stride=1, padding=0, bias=not norm,
                            norm=norm_module(norm, self.in_channels), activation=F.relu_)
-=======
-                   norm=norm_module(norm, self.key_channels), activation=F.relu),
-            Conv2d(in_channels=self.key_channels, out_channels=self.key_channels,
-                   kernel_size=1, stride=1, padding=0, bias=not norm,
-                   norm=norm_module(norm, self.key_channels), activation=F.relu),
-        )
-        self.f_down = Conv2d(in_channels=self.in_channels, out_channels=self.key_channels,
-                             kernel_size=1, stride=1, padding=0, bias=not norm,
-                             norm=norm_module(norm, self.key_channels), activation=F.relu)
-        self.f_up = Conv2d(in_channels=self.key_channels, out_channels=self.in_channels,
-                           kernel_size=1, stride=1, padding=0, bias=not norm,
-                           norm=norm_module(norm, self.key_channels), activation=F.relu)
->>>>>>> 322282a57f9e1bc3dbd2fe618830ab7361aa5650
                            
     def forward(self, x, proxy):
         batch_size, h, w = x.size(0), x.size(2), x.size(3)
@@ -229,11 +208,7 @@ class SpatialOCR_Module(nn.Module):
         self.conv_bn_dropout = nn.Sequential(
             Conv2d(in_channels=_in_channels, out_channels=out_channels,
                    kernel_size=1, padding=0, bias=not norm,
-<<<<<<< HEAD
                    norm=norm_module(norm, out_channels), activation=F.relu_),
-=======
-                   norm=norm_module(norm, out_channels), activation=F.relu),
->>>>>>> 322282a57f9e1bc3dbd2fe618830ab7361aa5650
             nn.Dropout(dropout)
         )
 
@@ -247,10 +222,6 @@ class OCRHead(nn.Module):
     """
     OCR Refine Module.
     """
-<<<<<<< HEAD
-=======
-# self.ocr_head = OCRHead(decoder_channels, decoder_channels, decoder_channels//2, num_classes)
->>>>>>> 322282a57f9e1bc3dbd2fe618830ab7361aa5650
     def __init__(self, in_channels, out_channels, key_channels, num_classes, norm='BN'):
         super().__init__()
         self.num_classes = num_classes
@@ -263,11 +234,7 @@ class OCRHead(nn.Module):
             in_channels=in_channels,
             key_channels=key_channels,
             out_channels=out_channels,
-<<<<<<< HEAD
-            scale=2,
-=======
             scale=1,
->>>>>>> 322282a57f9e1bc3dbd2fe618830ab7361aa5650
             dropout=0,
             norm=norm
         )
