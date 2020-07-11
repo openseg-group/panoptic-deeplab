@@ -54,11 +54,11 @@ LOSS:
     NAME: "hard_pixel_mining"
     IGNORE: 255
     TOP_K_PERCENT: 0.2
-    WEIGHT: 1.0
+    WEIGHT: 0.5
   AUX_SEMANTIC:
     NAME: "cross_entropy"
     IGNORE: 255
-    WEIGHT: 0.4
+    WEIGHT: 0.5
   CENTER:
     NAME: "mse"
     WEIGHT: 200.0
