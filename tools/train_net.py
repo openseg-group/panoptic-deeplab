@@ -51,11 +51,7 @@ def parse_args():
 
 def main():
     args = parse_args()
-<<<<<<< HEAD
     torch.autograd.set_detect_anomaly(os.environ.get('da') is not None)
-=======
-
->>>>>>> 322282a57f9e1bc3dbd2fe618830ab7361aa5650
     logger = logging.getLogger('segmentation')
     if not logger.isEnabledFor(logging.INFO):  # setup_logger is not called
         setup_logger(output=config.OUTPUT_DIR, distributed_rank=args.local_rank)
