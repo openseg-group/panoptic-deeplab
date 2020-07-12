@@ -16,17 +16,19 @@ from .conv_module import stacked_conv
 from .panoptic_deeplab import SinglePanopticDeepLabDecoder, SinglePanopticDeepLabHead
 
 
-__all__ = ["PanopticOCRDecoder"]
+__all__ = ["PanopticFCNDecoder"]
 
 
-class SinglePanopticOCRDecoder(nn.Module):
+class SinglePanopticFCNDecoder(nn.Module):
     def __init__(self, in_channels, feature_key, low_level_channels, low_level_key, low_level_channels_project,
-                 decoder_channels, num_classes, ocr_channels=None):
-        super(SinglePanopticOCRDecoder, self).__init__()
-        if ocr_channels is None:
-            ocr_channels = decoder_channels
+                 decoder_channels, num_classes):
+        super(SinglePanopticFCNDecoder, self).__init__()
 
-        self.ocr = OCRHead(in_channels, decoder_channels, in_channels//2, num_classes)
+        self.fcn = nn.Sequential(
+            nn.Conv2d(in_channels, decoder_channels, 3, padding=1, bias=False),
+            nn.BatchNorm2d(decoder_channels),
+            nn.ReLU(inplace=True)
+        )
         self.feature_key = feature_key
         self.decoder_stage = len(low_level_channels)
         assert self.decoder_stage == len(low_level_key)
@@ -48,10 +50,7 @@ class SinglePanopticOCRDecoder(nn.Module):
                     nn.ReLU(inplace=True)
                 )
             )
-            if i == 0:
-                fuse_in_channels = ocr_channels + low_level_channels_project[i]
-            else:
-                fuse_in_channels = decoder_channels + low_level_channels_project[i]
+            fuse_in_channels = decoder_channels + low_level_channels_project[i]
             fuse.append(
                 fuse_conv(
                     fuse_in_channels,
@@ -64,9 +63,9 @@ class SinglePanopticOCRDecoder(nn.Module):
     def set_image_pooling(self, pool_size):
         pass
 
-    def forward(self, features, coarse_map):
+    def forward(self, features):
         x = features[self.feature_key]
-        x = self.ocr(x, coarse_map)
+        x = self.fcn(x)
 
         # build decoder
         for i in range(self.decoder_stage):
@@ -79,24 +78,16 @@ class SinglePanopticOCRDecoder(nn.Module):
         return x
 
 
-class PanopticOCRDecoder(nn.Module):
+class PanopticFCNDecoder(nn.Module):
     def __init__(self, in_channels, feature_key, low_level_channels, low_level_key, low_level_channels_project,
                  decoder_channels, atrous_rates, num_classes, **kwargs):
-        super(PanopticOCRDecoder, self).__init__()
+        super(PanopticFCNDecoder, self).__init__()
         # Build semantic decoder
         self.feature_key = feature_key
 
-        self.semantic_decoder = nn.Sequential(
-            nn.Conv2d(in_channels, decoder_channels, 3, padding=1, bias=False),
-            nn.BatchNorm2d(decoder_channels),
-            nn.ReLU(inplace=True)
-        )
-        self.aux_semantic_head = SinglePanopticDeepLabHead(decoder_channels, decoder_channels, [num_classes], ['aux_semantic'])
-
-        # extra OCR head
-        self.ocr_head = SinglePanopticOCRDecoder(in_channels, feature_key, low_level_channels,
-                                                low_level_key, low_level_channels_project,
-                                                decoder_channels, num_classes)
+        self.semantic_decoder = SinglePanopticFCNDecoder(in_channels, feature_key, low_level_channels,
+                                                             low_level_key, low_level_channels_project,
+                                                             decoder_channels)
         self.semantic_head = SinglePanopticDeepLabHead(decoder_channels, decoder_channels, [num_classes], ['semantic'])
 
         # Build instance decoder
@@ -110,10 +101,8 @@ class PanopticOCRDecoder(nn.Module):
                 low_level_key=low_level_key,
                 low_level_channels_project=kwargs['instance_low_level_channels_project'],
                 decoder_channels=kwargs['instance_decoder_channels'],
-                atrous_rates=atrous_rates,
-                aspp_channels=kwargs['instance_aspp_channels']
             )
-            self.instance_decoder = SinglePanopticDeepLabDecoder(**instance_decoder_kwargs)
+            self.instance_decoder = SinglePanopticFCNDecoder(**instance_decoder_kwargs)
             instance_head_kwargs = dict(
                 decoder_channels=kwargs['instance_decoder_channels'],
                 head_channels=kwargs['instance_head_channels'],
@@ -130,16 +119,10 @@ class PanopticOCRDecoder(nn.Module):
         pred = OrderedDict()
 
         # Semantic branch
-        semantic_features = self.semantic_decoder(features[self.feature_key])
-        aux_semantic = self.aux_semantic_head(semantic_features)
-        for key in aux_semantic.keys():
-            pred[key] = aux_semantic[key]
-
-        # OCR branch
-        ocr_features = self.ocr_head(features, aux_semantic['aux_semantic'])
-        semantic = self.semantic_head(ocr_features)
+        semantic = self.semantic_decoder(features)
+        semantic = self.semantic_head(semantic)
         for key in semantic.keys():
-            pred[key] = semantic[key]    
+            pred[key] = semantic[key]
 
         # Instance branch
         if self.instance_decoder is not None:
