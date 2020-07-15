@@ -1,6 +1,7 @@
 PYTHON="/data/anaconda/envs/pytorch1.5/bin/python"
 
 CONFIG=$1
+pip install git+https://github.com/mcordts/cityscapesScripts.git
 
 # export mapillary_pretrain=1
 export CUDA_VISIBLE_DEVICES=0,1,2,3
@@ -13,4 +14,4 @@ $PYTHON -m torch.distributed.launch \
 
 # evaluation
 # $PYTHON tools/test_net_single_core.py \
-#                 --cfg configs/${CONFIG}.yaml
+#                 --cfg configs/${CONFIG}.yaml \

@@ -11,6 +11,11 @@ import glob
 from fvcore.common.file_io import PathManager
 from segmentation.utils import save_annotation
 
+# instance_metric = CityscapesInstanceEvaluator(
+#     output_dir=os.path.join(config.OUTPUT_DIR, config.TEST.INSTANCE_FOLDER),
+#     train_id_to_eval_id=data_loader.dataset.train_id_to_eval_id(),
+#     gt_dir=os.path.join(config.DATASET.ROOT, 'gtFine', config.DATASET.TEST_SPLIT)
+# )
 
 class CityscapesInstanceEvaluator:
     """
@@ -78,8 +83,11 @@ class CityscapesInstanceEvaluator:
 
         # These lines are adopted from
         # https://github.com/mcordts/cityscapesScripts/blob/master/cityscapesscripts/evaluation/evalInstanceLevelSemanticLabeling.py # noqa
-        gt_dir = PathManager.get_local_path(self._gt_dir)
-        groundTruthImgList = glob.glob(os.path.join(gt_dir, "*", "*_gtFine_instanceIds.png"))
+        # gt_dir = PathManager.get_local_path(self._gt_dir)
+        gt_dir = os.path.abspath(self._gt_dir)
+        groundTruthImgList = glob.glob(os.path.join(self._gt_dir, "*", "*_gtFine_instanceIds.png"))
+
+        print(groundTruthImgList)
         assert len(
             groundTruthImgList
         ), "Cannot find any ground truth images to use for evaluation. Searched for: {}".format(

@@ -82,7 +82,7 @@ def main():
 
     model.set_image_pooling((pool_h, pool_w))
 
-    logger.info("Model:\n{}".format(model))
+    # logger.info("Model:\n{}".format(model))
     model = model.to(device)
 
     # build data_loader

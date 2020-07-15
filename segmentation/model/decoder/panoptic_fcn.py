@@ -20,13 +20,22 @@ __all__ = ["PanopticFCNDecoder"]
 
 
 class SinglePanopticFCNDecoder(nn.Module):
-    def __init__(self, in_channels, feature_key, low_level_channels, low_level_key, low_level_channels_project,
-                 decoder_channels, num_classes):
+    def __init__(self, 
+                 in_channels, 
+                 feature_key, 
+                 low_level_channels, 
+                 low_level_key, 
+                 low_level_channels_project,
+                 decoder_channels,
+                 atrous_rates, 
+                 aspp_channels=None):
         super(SinglePanopticFCNDecoder, self).__init__()
+        if aspp_channels is None:
+            aspp_channels = decoder_channels
 
         self.fcn = nn.Sequential(
-            nn.Conv2d(in_channels, decoder_channels, 3, padding=1, bias=False),
-            nn.BatchNorm2d(decoder_channels),
+            nn.Conv2d(in_channels, aspp_channels, 3, padding=1, bias=False),
+            nn.BatchNorm2d(aspp_channels),
             nn.ReLU(inplace=True)
         )
         self.feature_key = feature_key
@@ -50,7 +59,10 @@ class SinglePanopticFCNDecoder(nn.Module):
                     nn.ReLU(inplace=True)
                 )
             )
-            fuse_in_channels = decoder_channels + low_level_channels_project[i]
+            if i == 0:
+                fuse_in_channels = aspp_channels + low_level_channels_project[i]
+            else:
+                fuse_in_channels = decoder_channels + low_level_channels_project[i]
             fuse.append(
                 fuse_conv(
                     fuse_in_channels,
@@ -79,15 +91,23 @@ class SinglePanopticFCNDecoder(nn.Module):
 
 
 class PanopticFCNDecoder(nn.Module):
-    def __init__(self, in_channels, feature_key, low_level_channels, low_level_key, low_level_channels_project,
-                 decoder_channels, atrous_rates, num_classes, **kwargs):
+    def __init__(self, 
+                 in_channels, 
+                 feature_key, 
+                 low_level_channels, 
+                 low_level_key, 
+                 low_level_channels_project,
+                 decoder_channels, 
+                 atrous_rates,
+                 num_classes, 
+                 **kwargs):
         super(PanopticFCNDecoder, self).__init__()
         # Build semantic decoder
         self.feature_key = feature_key
 
         self.semantic_decoder = SinglePanopticFCNDecoder(in_channels, feature_key, low_level_channels,
-                                                             low_level_key, low_level_channels_project,
-                                                             decoder_channels)
+                                                         low_level_key, low_level_channels_project,
+                                                         decoder_channels, atrous_rates)
         self.semantic_head = SinglePanopticDeepLabHead(decoder_channels, decoder_channels, [num_classes], ['semantic'])
 
         # Build instance decoder
@@ -101,6 +121,8 @@ class PanopticFCNDecoder(nn.Module):
                 low_level_key=low_level_key,
                 low_level_channels_project=kwargs['instance_low_level_channels_project'],
                 decoder_channels=kwargs['instance_decoder_channels'],
+                atrous_rates=atrous_rates,
+                aspp_channels=kwargs['instance_aspp_channels']
             )
             self.instance_decoder = SinglePanopticFCNDecoder(**instance_decoder_kwargs)
             instance_head_kwargs = dict(
