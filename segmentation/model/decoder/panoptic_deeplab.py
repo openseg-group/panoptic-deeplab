@@ -10,7 +10,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from .aspp import ASPP
+from .aspp import ASPP, SepASPP
 from .ocr import OCRHead
 from .conv_module import stacked_conv
 
@@ -20,11 +20,16 @@ __all__ = ["PanopticDeepLabDecoder", "PanopticOCRDecoder"]
 
 class SinglePanopticDeepLabDecoder(nn.Module):
     def __init__(self, in_channels, feature_key, low_level_channels, low_level_key, low_level_channels_project,
-                 decoder_channels, atrous_rates, aspp_channels=None):
+                 decoder_channels, atrous_rates, aspp_channels=None, use_sep_conv=False):
         super(SinglePanopticDeepLabDecoder, self).__init__()
         if aspp_channels is None:
             aspp_channels = decoder_channels
-        self.aspp = ASPP(in_channels, out_channels=aspp_channels, atrous_rates=atrous_rates)
+        
+        if use_sep_conv:
+            self.aspp = SepASPP(in_channels, out_channels=aspp_channels, atrous_rates=atrous_rates)
+        else:
+            self.aspp = ASPP(in_channels, out_channels=aspp_channels, atrous_rates=atrous_rates)
+            
         self.feature_key = feature_key
         self.decoder_stage = len(low_level_channels)
         assert self.decoder_stage == len(low_level_key)

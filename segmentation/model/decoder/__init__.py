@@ -1,4 +1,4 @@
-from .aspp import ASPP
+from .aspp import ASPP, SepASPP
 from .ocr import OCRHead
 from .deeplabv3 import DeepLabV3Decoder
 from .deeplabv3plus import DeepLabV3PlusDecoder

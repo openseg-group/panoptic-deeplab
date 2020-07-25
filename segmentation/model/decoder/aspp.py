@@ -7,7 +7,9 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-__all__ = ["ASPP"]
+from .conv_module import depthwise_separable_conv
+
+__all__ = ["ASPP", "SepASPP"]
 
 
 class ASPPConv(nn.Sequential):
@@ -18,6 +20,12 @@ class ASPPConv(nn.Sequential):
             nn.ReLU(inplace=True)
         ]
         super(ASPPConv, self).__init__(*modules)
+
+
+class SepASPPConv(nn.Sequential):
+    def __init__(self, in_channels, out_channels, dilation):
+        modules = depthwise_separable_conv(in_channels, out_channels, 3, padding=dilation, dilation=dilation)
+        super(SepASPPConv, self).__init__(*modules)
 
 
 class ASPPPooling(nn.Module):
@@ -52,6 +60,41 @@ class ASPP(nn.Module):
         modules.append(ASPPConv(in_channels, out_channels, rate1))
         modules.append(ASPPConv(in_channels, out_channels, rate2))
         modules.append(ASPPConv(in_channels, out_channels, rate3))
+        modules.append(ASPPPooling(in_channels, out_channels))
+
+        self.convs = nn.ModuleList(modules)
+
+        self.project = nn.Sequential(
+            nn.Conv2d(5 * out_channels, out_channels, 1, bias=False),
+            nn.BatchNorm2d(out_channels),
+            nn.ReLU(inplace=True),
+            nn.Dropout(0.5))
+
+    def set_image_pooling(self, pool_size):
+        self.convs[-1].set_image_pooling(pool_size)
+
+    def forward(self, x):
+        res = []
+        for conv in self.convs:
+            res.append(conv(x))
+        res = torch.cat(res, dim=1)
+        return self.project(res)
+
+
+class SepASPP(nn.Module):
+    def __init__(self, in_channels, out_channels, atrous_rates):
+        super(SepASPP, self).__init__()
+        # out_channels = 256
+        modules = []
+        modules.append(nn.Sequential(
+            nn.Conv2d(in_channels, out_channels, 1, bias=False),
+            nn.BatchNorm2d(out_channels),
+            nn.ReLU(inplace=True)))
+
+        rate1, rate2, rate3 = tuple(atrous_rates)
+        modules.append(SepASPPConv(in_channels, out_channels, rate1))
+        modules.append(SepASPPConv(in_channels, out_channels, rate2))
+        modules.append(SepASPPConv(in_channels, out_channels, rate3))
         modules.append(ASPPPooling(in_channels, out_channels))
 
         self.convs = nn.ModuleList(modules)
