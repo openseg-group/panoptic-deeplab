@@ -1,6 +1,6 @@
 # ------------------------------------------------------------------------------
 # Panoptic-DeepLab decoder.
-# Written by Bowen Cheng (bcheng9@illinois.edu)
+# Written by Rainbowsecret (yhyuan@pku.edu.cn)
 # ------------------------------------------------------------------------------
 
 from collections import OrderedDict
@@ -21,7 +21,7 @@ __all__ = ["PanopticOCRDecoder"]
 
 class SinglePanopticOCRDecoder(nn.Module):
     def __init__(self, in_channels, feature_key, low_level_channels, low_level_key, low_level_channels_project,
-                 decoder_channels, num_classes, ocr_channels=None):
+                 decoder_channels, num_classes, ocr_channels=None, aspp_channels=None):
         super(SinglePanopticOCRDecoder, self).__init__()
         if ocr_channels is None:
             ocr_channels = decoder_channels
