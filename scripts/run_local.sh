@@ -1,7 +1,9 @@
 PYTHON="/data/anaconda/envs/pytorch1.5/bin/python"
+PYTHON="/data/anaconda/envs/pytorch1.5.1/bin/python"
 
 CONFIG=$1
-pip install git+https://github.com/mcordts/cityscapesScripts.git
+$PYTHON -m pip install git+https://github.com/mcordts/cityscapesScripts.git
+$PYTHON -m pip install fvcore
 
 # export mapillary_pretrain=1
 export CUDA_VISIBLE_DEVICES=0,1,2,3

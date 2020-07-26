@@ -119,7 +119,7 @@ class PanopticDeepLabDecoder(nn.Module):
         # Build semantic decoder
         self.semantic_decoder = SinglePanopticDeepLabDecoder(in_channels, feature_key, low_level_channels,
                                                              low_level_key, low_level_channels_project,
-                                                             decoder_channels, atrous_rates)
+                                                             decoder_channels, atrous_rates, use_sep_conv=True)
         self.semantic_head = SinglePanopticDeepLabHead(decoder_channels, decoder_channels, [num_classes], ['semantic'])
         # Build instance decoder
         self.instance_decoder = None
@@ -133,7 +133,8 @@ class PanopticDeepLabDecoder(nn.Module):
                 low_level_channels_project=kwargs['instance_low_level_channels_project'],
                 decoder_channels=kwargs['instance_decoder_channels'],
                 atrous_rates=atrous_rates,
-                aspp_channels=kwargs['instance_aspp_channels']
+                aspp_channels=kwargs['instance_aspp_channels'],
+                use_sep_conv=True,
             )
             self.instance_decoder = SinglePanopticDeepLabDecoder(**instance_decoder_kwargs)
             instance_head_kwargs = dict(

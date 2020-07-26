@@ -22,7 +22,7 @@ def basic_conv(in_planes, out_planes, kernel_size, stride=1, padding=1, dilation
     if with_bn:
         module.append(nn.BatchNorm2d(out_planes))
     if with_relu:
-        module.append(nn.ReLU())
+        module.append(nn.ReLU(inplace=True))
     return nn.Sequential(*module)
 
 
@@ -40,7 +40,7 @@ def depthwise_separable_conv(in_planes, out_planes, kernel_size, stride=1, paddi
     if with_bn:
         module.append(nn.BatchNorm2d(out_planes))
     if with_relu:
-        module.append(nn.ReLU())
+        module.append(nn.ReLU(inplace=True))
     return nn.Sequential(*module)
 
 

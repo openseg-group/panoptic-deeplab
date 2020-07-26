@@ -222,7 +222,7 @@ class OCRHead(nn.Module):
     """
     OCR Refine Module.
     """
-    def __init__(self, in_channels, out_channels, key_channels, num_classes, norm='BN'):
+    def __init__(self, in_channels, out_channels, key_channels, num_classes, scale=1, norm='BN'):
         super().__init__()
         self.num_classes = num_classes
         self.norm = norm
@@ -234,8 +234,8 @@ class OCRHead(nn.Module):
             in_channels=in_channels,
             key_channels=key_channels,
             out_channels=out_channels,
-            scale=1,
-            dropout=0,
+            scale=scale,
+            dropout=0.1,
             norm=norm
         )
 

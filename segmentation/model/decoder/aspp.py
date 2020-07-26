@@ -68,7 +68,7 @@ class ASPP(nn.Module):
             nn.Conv2d(5 * out_channels, out_channels, 1, bias=False),
             nn.BatchNorm2d(out_channels),
             nn.ReLU(inplace=True),
-            nn.Dropout(0.5))
+            nn.Dropout(0.1))
 
     def set_image_pooling(self, pool_size):
         self.convs[-1].set_image_pooling(pool_size)
@@ -103,7 +103,7 @@ class SepASPP(nn.Module):
             nn.Conv2d(5 * out_channels, out_channels, 1, bias=False),
             nn.BatchNorm2d(out_channels),
             nn.ReLU(inplace=True),
-            nn.Dropout(0.5))
+            nn.Dropout(0.1))
 
     def set_image_pooling(self, pool_size):
         self.convs[-1].set_image_pooling(pool_size)

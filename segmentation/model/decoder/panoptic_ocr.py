@@ -79,6 +79,29 @@ class OCRCascadeDecoder(nn.Module):
         return x
 
 
+class LightClassHead(nn.Module):
+    def __init__(self, decoder_channels, num_classes, class_key):
+        super(LightClassHead, self).__init__()
+
+        self.num_head = len(num_classes)
+        assert self.num_head == len(class_key)
+
+        classifier = {}
+        for i in range(self.num_head):
+            classifier[class_key[i]] = nn.Conv2d(decoder_channels, num_classes[i], 1)
+
+        self.classifier = nn.ModuleDict(classifier)
+        self.class_key = class_key
+
+    def forward(self, x):
+        pred = OrderedDict()
+        # build classifier
+        for key in self.class_key:
+            pred[key] = self.classifier[key](x)
+
+        return pred
+
+
 class PanopticOCRDecoder(nn.Module):
     def __init__(self, in_channels, feature_key, low_level_channels, low_level_key, low_level_channels_project,
                  decoder_channels, atrous_rates, num_classes, **kwargs):
@@ -87,20 +110,21 @@ class PanopticOCRDecoder(nn.Module):
         self.feature_key = feature_key
         self.low_level_key = low_level_key
 
-        # self.semantic_decoder = depthwise_separable_conv(in_channels + sum(low_level_channels), decoder_channels, 3, padding=1)
-        self.semantic_decoder = nn.Sequential(
-            nn.Conv2d(in_channels + sum(low_level_channels), decoder_channels, 1, bias=False),
-            nn.BatchNorm2d(decoder_channels),
-            nn.ReLU(inplace=True)
-        )
-        self.aux_semantic_head = SinglePanopticDeepLabHead(decoder_channels, decoder_channels, [num_classes], ['aux_semantic'])
+        self.bottleneck = depthwise_separable_conv(in_channels + sum(low_level_channels), decoder_channels, 5, padding=1)
+        # self.semantic_decoder = nn.Sequential(
+        #     nn.Conv2d(in_channels + sum(low_level_channels), decoder_channels, 1, bias=False),
+        #     nn.BatchNorm2d(decoder_channels),
+        #     nn.ReLU(inplace=True)
+        # )
+        # self.aux_semantic_head = SinglePanopticDeepLabHead(in_channels + sum(low_level_channels), decoder_channels, [num_classes], ['aux_semantic'])
+        self.aux_semantic_head = LightClassHead(decoder_channels, [num_classes], ['aux_semantic'])
 
         # extra OCR head
         # self.ocr_head = OCRCascadeDecoder(in_channels, feature_key, low_level_channels,
         #                                   low_level_key, low_level_channels_project,
         #                                   decoder_channels, num_classes)
-        self.ocr_head = OCRHead(decoder_channels, decoder_channels, decoder_channels//2, num_classes)
-        self.semantic_head = SinglePanopticDeepLabHead(decoder_channels, decoder_channels, [num_classes], ['semantic'])
+        self.ocr_head = OCRHead(decoder_channels, decoder_channels, decoder_channels//2, num_classes, scale=2)
+        self.semantic_head = LightClassHead(decoder_channels, [num_classes], ['semantic'])
 
         # Build instance decoder
         self.instance_decoder = None
@@ -114,7 +138,8 @@ class PanopticOCRDecoder(nn.Module):
                 low_level_channels_project=kwargs['instance_low_level_channels_project'],
                 decoder_channels=kwargs['instance_decoder_channels'],
                 atrous_rates=atrous_rates,
-                aspp_channels=kwargs['instance_aspp_channels']
+                aspp_channels=kwargs['instance_aspp_channels'],
+                use_sep_conv=True,
             )
             self.instance_decoder = SinglePanopticDeepLabDecoder(**instance_decoder_kwargs)
             instance_head_kwargs = dict(
@@ -134,7 +159,6 @@ class PanopticOCRDecoder(nn.Module):
 
         # Semantic branch
         # concatenate all the feature maps.
-
         low_level_features = [features[i] for i in self.low_level_key]
         high_level_feature = features[self.feature_key]
         
@@ -153,9 +177,9 @@ class PanopticOCRDecoder(nn.Module):
         all_level_features.append(high_level_feature)
         fuse_features = torch.cat(all_level_features, dim=1)
 
-        print("fuse_features shape: {}".format(fuse_features.shape))
+        # print("fuse_features shape: {}".format(fuse_features.shape))
 
-        semantic_features = self.semantic_decoder(fuse_features)
+        semantic_features = self.bottleneck(fuse_features)
         aux_semantic = self.aux_semantic_head(semantic_features)
 
         for key in aux_semantic.keys():
@@ -165,7 +189,7 @@ class PanopticOCRDecoder(nn.Module):
         ocr_features = self.ocr_head(semantic_features, aux_semantic['aux_semantic'])
         semantic = self.semantic_head(ocr_features)
         for key in semantic.keys():
-            pred[key] = semantic[key]    
+            pred[key] = semantic[key]
 
         # Instance branch
         if self.instance_decoder is not None:
