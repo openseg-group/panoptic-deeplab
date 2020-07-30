@@ -21,7 +21,7 @@ __all__ = ["PanopticOCRDecoder"]
 
 class SinglePanopticOCRDecoder(nn.Module):
     def __init__(self, in_channels, feature_key, low_level_channels, low_level_key, low_level_channels_project,
-                 decoder_channels, num_classes, ocr_channels=None, aspp_channels=None, use_sep_conv=True):
+                 decoder_channels, num_classes, ocr_channels=None, aspp_channels=None, use_sep_conv=False):
         super(SinglePanopticOCRDecoder, self).__init__()
         if aspp_channels is None:
             aspp_channels = decoder_channels
@@ -96,12 +96,7 @@ class PanopticOCRDecoder(nn.Module):
         # Build semantic decoder
         self.feature_key = feature_key
 
-        self.semantic_decoder = nn.Sequential(
-            nn.Conv2d(in_channels, decoder_channels, 3, padding=1, bias=False),
-            nn.BatchNorm2d(decoder_channels),
-            nn.ReLU(inplace=True)
-        )
-        self.aux_semantic_head = SinglePanopticDeepLabHead(decoder_channels, decoder_channels, [num_classes], ['aux_semantic'])
+        self.aux_semantic_head = SinglePanopticDeepLabHead(in_channels, decoder_channels, [num_classes], ['aux_semantic'])
 
         # extra OCR head
         self.ocr_head = SinglePanopticOCRDecoder(in_channels, feature_key, low_level_channels,
@@ -140,8 +135,7 @@ class PanopticOCRDecoder(nn.Module):
         pred = OrderedDict()
 
         # Semantic branch
-        semantic_features = self.semantic_decoder(features[self.feature_key])
-        aux_semantic = self.aux_semantic_head(semantic_features)
+        aux_semantic = self.aux_semantic_head(features[self.feature_key])
         for key in aux_semantic.keys():
             pred[key] = aux_semantic[key]
 
@@ -149,7 +143,7 @@ class PanopticOCRDecoder(nn.Module):
         ocr_features = self.ocr_head(features, aux_semantic['aux_semantic'])
         semantic = self.semantic_head(ocr_features)
         for key in semantic.keys():
-            pred[key] = semantic[key]    
+            pred[key] = semantic[key]   
 
         # Instance branch
         if self.instance_decoder is not None:
